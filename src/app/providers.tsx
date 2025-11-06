@@ -5,8 +5,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <HardalProvider
       config={{
-        website: "cmhkztndw000bnfwrmx0po2mk",
-        hostUrl: "https://app.usehardal.com/projects/cmh4luj0v0002i90xsk4b723m",
+        website: "cmh4lut1e0008i90xj6hivu5r",
+        hostUrl: "https://cmh4lut1e0008i90xj6hivu5r-signal.usehardal.com",
       }}
       autoPageTracking={true} // ✅ Tracks all route changes
     >
