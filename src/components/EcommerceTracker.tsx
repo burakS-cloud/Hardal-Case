@@ -47,43 +47,67 @@ const generateRandomEcommerceData = (email: string, phone: string) => {
 };
 
 export function EcommerceTracker() {
-  const { track, distinct } = useHardal();
+  const { distinct } = useHardal();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handles form submission: tracks form_submitted, identifies user, and tracks e-commerce event
+  const SIGNAL_HOST = "https://cmh4lut1e0008i90xj6hivu5r-signal.usehardal.com";
+  const SIGNAL_WEBSITE = "cmh4lut1e0008i90xj6hivu5r";
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setSuccess(false);
     setError(null);
+
     try {
       const formData = new FormData(e.currentTarget);
-      const email = formData.get("email") as string;
-      const phone = formData.get("phone") as string;
+      const email = (formData.get("email") as string) || "";
+      const phone = (formData.get("phone") as string) || "";
 
-      // 1. Track the form submission event (ContactForm logic)
-      await track("form_submitted", {
-        formType: "contact",
-        source: "landing_page",
-      });
+      // Keep identifying the user with the SDK (non-blocking)
+      distinct({ email, phone, source: "contact_form" }).catch(() => {});
 
-      // 2. Identify the user (ContactForm logic)
-      await distinct({
-        email,
-        phone,
-        source: "contact_form",
-      });
-
-      // 3. Track a detailed e-commerce event (EcommerceTracker logic)
+      // Prepare payload like the manual test (this one will be visible in console)
       const eventData = generateRandomEcommerceData(email, phone);
-      await track("purchase_completed", {
-        ...eventData,
-        timestamp: new Date().toISOString(),
+      const payload = {
+        type: "event",
+        payload: {
+          website: SIGNAL_WEBSITE,
+          name: "purchase_completed",
+          url: window.location.href,
+          title: document.title,
+          device_type: "desktop",
+          language: navigator.language || "en-US",
+          platform: "web",
+          data: { ...eventData, timestamp: new Date().toISOString() },
+        },
+      };
+
+      const url = `${SIGNAL_HOST}/push/hardal/`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      setSuccess(true);
+      const text = await res.text();
+      let parsed: unknown = text;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // keep raw text if non-json
+      }
+
+      // Log the raw server response so you get the same console output as the manual test
+      console.log({ status: res.status, body: parsed });
+
+      if (!res.ok) {
+        setError(`Server returned ${res.status}`);
+      } else {
+        setSuccess(true);
+      }
     } catch (err: unknown) {
       function isErrorWithMessage(
         error: unknown
