@@ -2,51 +2,11 @@
 
 import { useHardal } from "hardal/react";
 import { useState } from "react";
+import { generateRandomEcommerceData } from "../utils/generateDummyData";
 
 // Helper to generate random e-commerce data
-const generateRandomEcommerceData = (email: string, phone: string) => {
-  const randomId = Math.floor(Math.random() * 10000);
-  return {
-    customer: {
-      email,
-      phone,
-      userId: `user_${randomId}`,
-    },
-    order: {
-      id: `order_${randomId}`,
-      total: Math.floor(Math.random() * 10000) / 100,
-      items: [
-        {
-          id: `prod_${Math.floor(Math.random() * 1000)}`,
-          name: "Premium Widget",
-          price: 29.99,
-          quantity: Math.floor(Math.random() * 5) + 1,
-          category: "Electronics",
-          variant: "Pro",
-        },
-        {
-          id: `prod_${Math.floor(Math.random() * 1000)}`,
-          name: "Deluxe Package",
-          price: 49.99,
-          quantity: Math.floor(Math.random() * 3) + 1,
-          category: "Services",
-          variant: "Annual",
-        },
-      ],
-    },
-    metadata: {
-      source: "product_page",
-      platform: "web",
-      session: {
-        id: `sess_${randomId}`,
-        referrer: "google.com",
-        device: "desktop",
-      },
-    },
-  };
-};
 
-export function EcommerceTracker() {
+export function EventTrackingForm() {
   const { distinct } = useHardal();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -69,7 +29,6 @@ export function EcommerceTracker() {
       // Keep identifying the user with the SDK (non-blocking)
       distinct({ email, phone, source: "contact_form" }).catch(() => {});
 
-      // Prepare payload like the manual test (this one will be visible in console)
       const eventData = generateRandomEcommerceData(email, phone);
       const payload = {
         type: "event",
@@ -100,7 +59,6 @@ export function EcommerceTracker() {
         // keep raw text if non-json
       }
 
-      // Log the raw server response so you get the same console output as the manual test
       console.log({ status: res.status, body: parsed });
 
       if (!res.ok) {
