@@ -3,43 +3,41 @@
 import { useHardal } from "hardal/react";
 import { useState } from "react";
 
-// Helper to generate random e-commerce data
-const generateRandomEcommerceData = (email: string, phone: string) => {
+// Helper to generate random subscription data
+const generateRandomSubscriptionData = (email: string, phone: string) => {
   const randomId = Math.floor(Math.random() * 10000);
   return {
     customer: {
       email,
       phone,
       userId: `user_${randomId}`,
+      customerType: "business",
     },
-    order: {
-      id: `order_${randomId}`,
-      total: Math.floor(Math.random() * 10000) / 100,
-      items: [
+    subscription: {
+      id: `sub_${randomId}`,
+      planName: "Enterprise Pro",
+      annualValue: Math.floor(Math.random() * 20000) / 100,
+      features: [
         {
-          id: `prod_${Math.floor(Math.random() * 1000)}`,
-          name: "Premium Widget",
-          price: 29.99,
-          quantity: Math.floor(Math.random() * 5) + 1,
-          category: "Electronics",
-          variant: "Pro",
+          id: `feat_${Math.floor(Math.random() * 1000)}`,
+          name: "Advanced Analytics",
+          tier: "enterprise",
+          seats: Math.floor(Math.random() * 10) + 5,
         },
         {
-          id: `prod_${Math.floor(Math.random() * 1000)}`,
-          name: "Deluxe Package",
-          price: 49.99,
-          quantity: Math.floor(Math.random() * 3) + 1,
-          category: "Services",
-          variant: "Annual",
+          id: `feat_${Math.floor(Math.random() * 1000)}`,
+          name: "Premium Support",
+          tier: "enterprise",
+          supportLevel: "24/7",
         },
       ],
     },
     metadata: {
-      source: "product_page",
+      source: "pricing_page",
       platform: "web",
       session: {
         id: `sess_${randomId}`,
-        referrer: "google.com",
+        referrer: "linkedin.com",
         device: "desktop",
       },
     },
@@ -47,13 +45,13 @@ const generateRandomEcommerceData = (email: string, phone: string) => {
 };
 
 export function EcommerceTracker() {
-  const { distinct } = useHardal();
+  const hardal = useHardal();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const SIGNAL_HOST = "https://cmh4lut1e0008i90xj6hivu5r-signal.usehardal.com";
-  const SIGNAL_WEBSITE = "cmh4lut1e0008i90xj6hivu5r";
+  // For debugging
+  console.log("Hardal context:", hardal);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,48 +64,13 @@ export function EcommerceTracker() {
       const email = (formData.get("email") as string) || "";
       const phone = (formData.get("phone") as string) || "";
 
-      // Keep identifying the user with the SDK (non-blocking)
-      distinct({ email, phone, source: "contact_form" }).catch(() => {});
+      console.log("Starting user identification...");
+      // First identify the user
+      await hardal.distinct({ email, phone, source: "subscription_form" });
+      console.log("User identified successfully");
 
-      // Prepare payload like the manual test (this one will be visible in console)
-      const eventData = generateRandomEcommerceData(email, phone);
-      const payload = {
-        type: "event",
-        payload: {
-          website: SIGNAL_WEBSITE,
-          name: "purchase_completed",
-          url: window.location.href,
-          title: document.title,
-          device_type: "desktop",
-          language: navigator.language || "en-US",
-          platform: "web",
-          data: { ...eventData, timestamp: new Date().toISOString() },
-        },
-      };
-
-      const url = `${SIGNAL_HOST}/push/hardal/`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const text = await res.text();
-      let parsed: unknown = text;
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        // keep raw text if non-json
-      }
-
-      // Log the raw server response so you get the same console output as the manual test
-      console.log({ status: res.status, body: parsed });
-
-      if (!res.ok) {
-        setError(`Server returned ${res.status}`);
-      } else {
-        setSuccess(true);
-      }
+      await hardal.track("testing_sdk_event", { test_property: "test_value" });
+      console.log("Custom event tracked successfully");
     } catch (err: unknown) {
       function isErrorWithMessage(
         error: unknown

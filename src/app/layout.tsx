@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -28,6 +29,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script
+          src="https://cmh4lut1e0008i90xj6hivu5r-signal.usehardal.com/hardal"
+          data-website-id="cmh4lut1e0008i90xj6hivu5r"
+          data-host-url="https://cmh4lut1e0008i90xj6hivu5r-signal.usehardal.com"
+          data-auto-track="true"
+          strategy="beforeInteractive"
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
